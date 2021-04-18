@@ -2,62 +2,61 @@
 #include <fstream>
 #include <string>
 #include<unordered_map>
+#include<list>
+#include<vector>
+#include <algorithm>
+
 
 using namespace std;
 
-class CityGraph{
-    unordered_map<string, list< pair<string, int>>> nodes;
+class Edge{
+    private:
+        string source;
+        string destination;
+        int distance;
     public:
-        void addEdge(string, string, int);
-        bool isInGraph(string);
-        void print();
+        const string getSource(){return this->source;}
+        const string getDestination(){return this->destination;}
+        const int getDistance(){return this->distance;}
+
+        friend bool operator<(Edge const& first, Edge const& second){return first.distance < second.distance;}
+        friend bool operator>(Edge const& first, Edge const& second){return first.distance > second.distance;}
+
+        Edge(string src, string dest, int dist){
+            this->source = src;
+            this->destination = dest;
+            this->distance = dist;
+        }
 };
 
-void CityGraph::addEdge(string base, string destination, int distance){
-    if(this->isInGraph(base)){
-        nodes[base].push_back(make_pair(destination, distance));
-        if(this->isInGraph(destination)){
-            nodes[destination].push_back(make_pair(base, distance));
-        }
-        else{
-            nodes.insert(destination, make_pair(base, distance));
-        }
-    }
-    else{
-        nodes.insert(base, make_pair(destination, distance));
-        if(this->isInGraph(destination)){
-            nodes[destination].push_back(make_pair(base, distance));
-        }
-        else{
-            nodes.insert(destination, make_pair(base,distance));
-        }
-    }
-}
+class CityGraph{
+    private:
+        int currentEdgeCount;
+        vector<Edge> edges;
 
-bool CityGraph::isInGraph(string x){
-    bool returnValue = false;
-    for(auto iter: this->nodes){
-        if(iter.first == x){
-            returnValue = true;
+    public:
+        void sortEdges();
+        void addEdge(Edge);
+        void print();
+
+        CityGraph(){
+            this->currentEdgeCount = 0;
         }
-    }
-    return returnValue;
+};
+
+void CityGraph::addEdge(Edge edge){
+    this->edges.push_back(edge);
+    this->currentEdgeCount++;
 }
 
 void CityGraph::print(){
-    for(auto iter: this->nodes){
-        string place = iter.first;
-        list<pair<string,int>> adjancies = iter.second;
-
-        cout<<place<<"->";
-        for(auto adj:adjancies){
-            int distance = adj.second;
-            string destinationPlace = adj.first;
-
-            cout<<destinationPlace<<" "<<distance<<" ";
-        }
-        cout<<endl;
+    for(Edge edge: this->edges){
+        cout<<edge.getSource()<<" to "<<edge.getDestination()<<" = "<<edge.getDistance()<<endl;
     }
+}
+
+void CityGraph::sortEdges(){
+    sort(this->edges.begin(), this->edges.end());
 }
 
 int main(){
@@ -69,22 +68,24 @@ int main(){
     string base,destination;
     int distance;
 
-    CityGraph Monstantinapolis;
+    CityGraph Monstantinapolis = CityGraph();
 
 
     while(!file.eof()){
         getline(file,line,',');
         base = line;
 
-        getline(file,line,",");
+        getline(file,line,',');
         destination = line;
 
-        getline(file, line,"\n");
+        getline(file, line,'\n');
         distance = stoi(line);
 
-        Monstantinapolis.addEdge(base,destination,distance);
+        Edge givenEdge = Edge(base,destination,distance);
+        Monstantinapolis.addEdge(givenEdge);
     }
 
+    Monstantinapolis.sortEdges(); //sorting edges in ascending order
     Monstantinapolis.print();
 
     return EXIT_SUCCESS;
