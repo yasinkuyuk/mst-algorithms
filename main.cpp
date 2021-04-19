@@ -1,12 +1,9 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include<unordered_map>
 #include<list>
 #include<vector>
 #include <algorithm>
-#include<map>
-
 
 using namespace std;
 
@@ -19,9 +16,19 @@ class Edge{
         const string getSource(){return this->source;}
         const string getDestination(){return this->destination;}
         const int getDistance(){return this->distance;}
+        void setDistance(int x){this->distance=x;}
+        void setDestination(string x){this->destination=x;}
+        void setSource(string x){this->source = x;}
 
         friend bool operator<(Edge const& first, Edge const& second){return first.distance < second.distance;}
         friend bool operator>(Edge const& first, Edge const& second){return first.distance > second.distance;}
+        friend bool operator==(Edge const& first, Edge const& second){
+            bool x = false;
+            if(first.destination == second.destination && first.source == second.source && first.distance == second.distance){
+                x = true;
+            }
+            return x;
+        }
 
         Edge(string src, string dest, int dist){
             this->source = src;
@@ -49,7 +56,6 @@ class CityGraph{
     public:
         void sortEdges();
         void addEdge(Edge);
-        void print();
         void printMST();
         int getVerticeCount(){return this->currentVerticeCount;}
 
@@ -76,22 +82,36 @@ void CityGraph::addEdge(Edge edge){
     this->edges.push_back(edge);
 }
 
-void CityGraph::print(){
-    for(Edge edge: this->edges){
-        cout<<edge.getSource()<<" to "<<edge.getDestination()<<" = "<<edge.getDistance()<<endl;
-    }
-}
-
 void CityGraph::sortEdges(){
     sort(this->edges.begin(), this->edges.end());
-    Edge temp = Edge("","",0);
-    for(auto iter: this->edges){
+    Edge minBetweenGPandChurch =  Edge("","",0);
+    Edge hippodrome = Edge("","",0);
 
+    for(auto iter: this->edges){
+        if(iter.getSource() == "GP" && iter.getDestination().substr(0,2) == "Ch"){
+            minBetweenGPandChurch.setSource(iter.getSource());
+            minBetweenGPandChurch.setDestination(iter.getDestination());
+            minBetweenGPandChurch.setDistance(iter.getDistance());
+        }
+        if(iter.getSource() == "GP" && iter.getDestination()=="Hipp"){
+            hippodrome.setSource(iter.getSource());
+            hippodrome.setDestination(iter.getDestination());
+            hippodrome.setDistance(iter.getDistance());
+        }
     }
+
+    vector<Edge>::iterator itr2 = find(this->edges.begin(), this->edges.end(), hippodrome);
+    int index2 = distance(this->edges.begin(),itr2);
+    this->edges.erase(this->edges.begin()+index2);
+    this->edges.insert(this->edges.begin(),hippodrome);
+
+    vector<Edge>::iterator itr = find(this->edges.begin(), this->edges.end(), minBetweenGPandChurch);
+    int index = distance(this->edges.begin(),itr);
+    this->edges.erase(this->edges.begin()+index);  
+    this->edges.insert(this->edges.begin(),minBetweenGPandChurch);
 }
 
 int CityGraph::findParent(vector<Node> vertices, int numericVertex){
-    cout<<"paremeter: "<<numericVertex<<endl;
     int parent = vertices[numericVertex].numeric;
     if(parent == numericVertex){
         return parent;
@@ -106,9 +126,6 @@ void CityGraph::createParents(){
         Node temp = Node(this->vertices[i],i);
         this->parents.push_back(temp);
     }
-    for(auto x: this->parents){
-        cout<<x.name<<" : "<<x.numeric<<endl;
-    }
 }
 
 int CityGraph::findNumeric(string name){
@@ -116,31 +133,38 @@ int CityGraph::findNumeric(string name){
     for(int i=0; i<this->currentVerticeCount; i++){
         if(this->vertices[i] == name){
             rt = i;
-            cout<<vertices[i]<<" "<<rt<<endl;
         }
     }
     return rt;
 }
 
 void CityGraph::printMST(){
-    cout<<".... Printing the MST by Kruskal's Algorithm...."<<endl;
     int curDistance = 0;
-
+    sort(this->minimumSpanningTree.begin(), this->minimumSpanningTree.end());
     for(auto x: this->minimumSpanningTree){
         cout<<x.getSource() << " "<< x.getDestination()<<" "<<x.getDistance()<<endl;
         curDistance += x.getDistance();
     }
 
-    cout<<"Total: "<<curDistance<<endl;
+    cout<<curDistance<<endl;
 }
 
 void CityGraph::kruskalAlgorithm(){
     vector<Edge> temp = this->edges;
 
     createParents();
-    for(int i=0; i < this->currentVerticeCount; i++){
+    for(unsigned int i=0; i < this->edges.size(); i++){
         Edge curEdge = temp[i];
-
+        if(curEdge.getSource().substr(0,2) =="Hp" && curEdge.getDestination().substr(0,2) =="Hp"){
+            continue;
+        }
+        if(curEdge.getSource() == "Hipp" && curEdge.getDestination().substr(0,3) == "Bas"){
+            continue;
+        }
+        if(curEdge.getDestination() == "Hipp" && curEdge.getSource().substr(0,3) == "Bas"){
+            continue;
+        }
+    
         int src = findNumeric(curEdge.getSource());
         int dest = findNumeric(curEdge.getDestination());
 
@@ -151,14 +175,12 @@ void CityGraph::kruskalAlgorithm(){
             this->minimumSpanningTree.push_back(curEdge);
             this->parents[destParent].name = this->parents[srcParent].name;
             this->parents[destParent].numeric = this->parents[srcParent].numeric;
-            cout<<parents[destParent].name<<" "<<parents[destParent].numeric<<" ------ "<<parents[srcParent].name<<" "<<parents[srcParent].numeric<<endl;
         }
-        cout<<i<<endl;
     }
 }
 
 int main(){
-    string filename = "city_plan.txt";
+    string filename = "city_plan_2.txt";
     ifstream file;
     file.open(filename);
     string line;
@@ -184,7 +206,6 @@ int main(){
     }
 
     Monstantinapolis.sortEdges(); //sorting edges in ascending order
-    Monstantinapolis.print();
     Monstantinapolis.kruskalAlgorithm();
     Monstantinapolis.printMST();
     
