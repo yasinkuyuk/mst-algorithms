@@ -30,24 +30,32 @@ class Edge{
         }
 };
 
+class Node{
+    public:
+        string name;
+        int numeric;
+        Node(string nam, int num){this->name=nam; this->numeric=num;}
+        Node(int num){this->numeric = num;}
+};
 
 class CityGraph{
     private:
         int currentVerticeCount;
         vector<Edge> edges;
         vector<string> vertices;
-        map<string,int> parents;
         vector<Edge> minimumSpanningTree;
+        vector<Node> parents;
 
     public:
         void sortEdges();
         void addEdge(Edge);
         void print();
+        void printMST();
         int getVerticeCount(){return this->currentVerticeCount;}
 
         void kruskalAlgorithm();
-        int findParent(map<string,int>,int);
-        void changeParents(map<string,int>, int, int);
+        int findParent(vector<Node>,int);
+        int findNumeric(string);
         void createParents();
 
         CityGraph(){
@@ -76,23 +84,15 @@ void CityGraph::print(){
 
 void CityGraph::sortEdges(){
     sort(this->edges.begin(), this->edges.end());
+    Edge temp = Edge("","",0);
+    for(auto iter: this->edges){
+
+    }
 }
 
-int CityGraph::findParent(map<string,int> vertices, int numericVertex){
-    int i=0;
-    int parent;
-
-    for(auto x: vertices){
-        if(i != numericVertex){
-            i++;
-            continue;
-        }
-        else{
-            parent = x.second;
-            break;
-        }
-    }
-
+int CityGraph::findParent(vector<Node> vertices, int numericVertex){
+    cout<<"paremeter: "<<numericVertex<<endl;
+    int parent = vertices[numericVertex].numeric;
     if(parent == numericVertex){
         return parent;
     }
@@ -103,38 +103,35 @@ int CityGraph::findParent(map<string,int> vertices, int numericVertex){
 
 void CityGraph::createParents(){
     for(int i=0; i< this->currentVerticeCount; i++){
-        pair<string,int> temp = make_pair(this->vertices[i],i);
-        this->parents.insert(temp);
+        Node temp = Node(this->vertices[i],i);
+        this->parents.push_back(temp);
     }
     for(auto x: this->parents){
-        cout<<x.first<<" : "<<x.second<<endl;
+        cout<<x.name<<" : "<<x.numeric<<endl;
     }
 }
 
-void CityGraph::changeParents(map<string,int> parent, int src, int dest){
-    pair<string, int> temp;
-    int i=0;
-    for(auto node: parent){
-        if(i != src){
-            i++;
-            continue;
+int CityGraph::findNumeric(string name){
+    int rt;
+    for(int i=0; i<this->currentVerticeCount; i++){
+        if(this->vertices[i] == name){
+            rt = i;
+            cout<<vertices[i]<<" "<<rt<<endl;
         }
-        else{
-            temp = node;
-            break;
-        }
+    }
+    return rt;
+}
+
+void CityGraph::printMST(){
+    cout<<".... Printing the MST by Kruskal's Algorithm...."<<endl;
+    int curDistance = 0;
+
+    for(auto x: this->minimumSpanningTree){
+        cout<<x.getSource() << " "<< x.getDestination()<<" "<<x.getDistance()<<endl;
+        curDistance += x.getDistance();
     }
 
-    int j=0;
-    for(auto node: parent){
-        if(j != dest){
-            j++;
-            continue;
-        }
-        else{
-            node.second = temp.second;
-        }
-    }
+    cout<<"Total: "<<curDistance<<endl;
 }
 
 void CityGraph::kruskalAlgorithm(){
@@ -143,17 +140,20 @@ void CityGraph::kruskalAlgorithm(){
     createParents();
     for(int i=0; i < this->currentVerticeCount; i++){
         Edge curEdge = temp[i];
-        cout<<endl<<curEdge.getSource();
-        int src = this->parents.at(curEdge.getSource());
-        int dest = this->parents.at(curEdge.getDestination());
-        cout<<src<<" "<<"dest";
+
+        int src = findNumeric(curEdge.getSource());
+        int dest = findNumeric(curEdge.getDestination());
+
         int srcParent= findParent(this->parents, src);
         int destParent = findParent(this->parents, dest);
-        cout<<"1111111111"<<endl;
-        if(src != dest){
+
+        if(srcParent != destParent){
             this->minimumSpanningTree.push_back(curEdge);
-            changeParents(this->parents, srcParent, destParent);
+            this->parents[destParent].name = this->parents[srcParent].name;
+            this->parents[destParent].numeric = this->parents[srcParent].numeric;
+            cout<<parents[destParent].name<<" "<<parents[destParent].numeric<<" ------ "<<parents[srcParent].name<<" "<<parents[srcParent].numeric<<endl;
         }
+        cout<<i<<endl;
     }
 }
 
@@ -186,7 +186,7 @@ int main(){
     Monstantinapolis.sortEdges(); //sorting edges in ascending order
     Monstantinapolis.print();
     Monstantinapolis.kruskalAlgorithm();
-    Monstantinapolis.print();
+    Monstantinapolis.printMST();
     
     return EXIT_SUCCESS;
 }
