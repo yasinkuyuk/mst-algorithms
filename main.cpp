@@ -86,17 +86,21 @@ void CityGraph::sortEdges(){
     sort(this->edges.begin(), this->edges.end());
     Edge minBetweenGPandChurch =  Edge("","",0);
     Edge hippodrome = Edge("","",0);
+    bool flag = true;
+    bool flag2 = true;
 
     for(auto iter: this->edges){
-        if(iter.getSource() == "GP" && iter.getDestination().substr(0,2) == "Ch"){
+        if(iter.getSource() == "GP" && iter.getDestination().substr(0,2) == "Ch" && flag){
             minBetweenGPandChurch.setSource(iter.getSource());
             minBetweenGPandChurch.setDestination(iter.getDestination());
             minBetweenGPandChurch.setDistance(iter.getDistance());
+            flag = false;
         }
-        if(iter.getSource() == "GP" && iter.getDestination()=="Hipp"){
+        if(iter.getSource() == "GP" && iter.getDestination()=="Hipp" && flag2){
             hippodrome.setSource(iter.getSource());
             hippodrome.setDestination(iter.getDestination());
             hippodrome.setDistance(iter.getDistance());
+            flag2= false;
         }
     }
 
@@ -180,7 +184,8 @@ void CityGraph::kruskalAlgorithm(){
 }
 
 int main(){
-    string filename = "city_plan_2.txt";
+    string filename;
+    cin >> filename;
     ifstream file;
     file.open(filename);
     string line;
